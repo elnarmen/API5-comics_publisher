@@ -72,7 +72,6 @@ def public_img(saved_photo_details, photo_caption, api_url, group_id, vk_token, 
 def main():
     load_dotenv()
     comic_number = random.randint(1, get_last_comic_num())
-    print(comic_number)
     image_details_url = f'https://xkcd.com/{comic_number}/info.0.json'
     path = pathlib.Path.cwd() / f'comic.png'
     api_url = 'https://api.vk.com/method/'
