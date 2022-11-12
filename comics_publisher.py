@@ -28,7 +28,9 @@ def get_upload_url(url, group_id, vk_token, api_version):
     return upload_url
 
 
-def upload_img(upload_url, path_to_img, api_url, group_id, vk_token, api_version):
+def upload_img(upload_url, path_to_img,
+               api_url, group_id,
+               vk_token, api_version):
     with open(path_to_img, 'rb') as file:
         files = {'file1': file}
         response = requests.post(upload_url, files=files)
@@ -55,7 +57,8 @@ def get_last_comic_num():
     return num
 
 
-def public_img(saved_photo_details, photo_caption, api_url, group_id, vk_token, api_version):
+def public_img(saved_photo_details, photo_caption,
+               api_url, group_id, vk_token, api_version):
     url = f'{api_url}wall.post'
     img_owner_id = int(saved_photo_details['response'][0]['owner_id'])
     photo_id = saved_photo_details['response'][0]['id']
@@ -80,8 +83,13 @@ def main():
     api_version = os.getenv('API_VERSION')
     photo_caption = download_img(image_details_url, path)
     upload_url = get_upload_url(api_url, group_id, vk_token, api_version)
-    saved_photo_details = upload_img(upload_url, path, api_url, group_id, vk_token, api_version)
-    public_img(saved_photo_details, photo_caption, api_url, group_id, vk_token, api_version)
+    saved_photo_details = upload_img(upload_url, path,
+                                     api_url, group_id,
+                                     vk_token, api_version)
+    public_img(saved_photo_details,
+               photo_caption,
+               api_url, group_id,
+               vk_token, api_version)
     path.unlink(missing_ok=True)
 
 
