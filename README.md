@@ -56,7 +56,7 @@ VK_CLIENT_ID = <client_id>
 #### VK_TOKEN
 Для получения токена перейдите в браузере по следующему адресу, вставив после символов `client_id=` ваш client_id
 ```
-https://oauth.vk.com/authorize?client_id=scope=photos,groups,wall,offline&response_type=token
+https://oauth.vk.com/authorize?client_id=&scope=photos,groups,wall,offline&response_type=token
 ```
 Далее скопируйте в адресной строке все после символов `access_token=` до символа `&`. Это ваш `VK_TOKEN`.
 
