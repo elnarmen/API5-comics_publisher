@@ -6,8 +6,8 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 
-def download_img(image_details_url, path):
-    response = requests.get(image_details_url)
+def download_img(comic_number, path):
+    response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
     response.raise_for_status()
     decoded_response = response.json()
     url_for_download = decoded_response['img']
@@ -20,16 +20,15 @@ def download_img(image_details_url, path):
     return photo_caption
 
 
-def get_upload_url(url, group_id, vk_token, api_version):
-    url = f'{url}photos.getWallUploadServer'
+def get_upload_url(group_id, vk_token, api_version):
+    url = 'https://api.vk.com/method/photos.getWallUploadServer'
     params = {'group_id': group_id, 'access_token': vk_token, 'v': api_version}
     response = requests.get(url, params)
     upload_url = response.json()['response']['upload_url']
     return upload_url
 
 
-def upload_img(upload_url, path_to_img,
-               api_url, group_id,
+def upload_img(upload_url, path_to_img, group_id,
                vk_token, api_version):
     with open(path_to_img, 'rb') as file:
         files = {'file1': file}
@@ -44,7 +43,7 @@ def upload_img(upload_url, path_to_img,
             'group_id': group_id,
             'v': api_version,
         }
-        response = requests.post(f'{api_url}photos.saveWallPhoto', params)
+        response = requests.post('https://api.vk.com/method/photos.saveWallPhoto', params)
         saved_photo_details = response.json()
         return saved_photo_details
 
@@ -57,9 +56,8 @@ def get_last_comic_num():
     return num
 
 
-def public_img(saved_photo_details, photo_caption,
-               api_url, group_id, vk_token, api_version):
-    url = f'{api_url}wall.post'
+def public_img(saved_photo_details, photo_caption, group_id, vk_token, api_version):
+    url = 'https://api.vk.com/method/wall.post'
     img_owner_id = int(saved_photo_details['response'][0]['owner_id'])
     photo_id = saved_photo_details['response'][0]['id']
     params = {'attachments': f'photo{img_owner_id}_{photo_id}',
@@ -75,20 +73,16 @@ def public_img(saved_photo_details, photo_caption,
 def main():
     load_dotenv()
     comic_number = random.randint(1, get_last_comic_num())
-    image_details_url = f'https://xkcd.com/{comic_number}/info.0.json'
     path = pathlib.Path.cwd() / f'comic.png'
-    api_url = 'https://api.vk.com/method/'
     group_id = os.getenv('VK_GROUP_ID')
     vk_token = os.getenv('VK_TOKEN')
     api_version = os.getenv('API_VERSION')
-    photo_caption = download_img(image_details_url, path)
-    upload_url = get_upload_url(api_url, group_id, vk_token, api_version)
-    saved_photo_details = upload_img(upload_url, path,
-                                     api_url, group_id,
+    photo_caption = download_img(comic_number, path)
+    upload_url = get_upload_url(group_id, vk_token, api_version)
+    saved_photo_details = upload_img(upload_url, path, group_id,
                                      vk_token, api_version)
     public_img(saved_photo_details,
-               photo_caption,
-               api_url, group_id,
+               photo_caption, group_id,
                vk_token, api_version)
     path.unlink(missing_ok=True)
 
