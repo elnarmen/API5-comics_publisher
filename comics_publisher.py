@@ -6,17 +6,20 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 
-def download_img(comic_number, path):
+def download_img(comic_number):
     response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
     response.raise_for_status()
-    decoded_response = response.json()
-    url_for_download = decoded_response['img']
-    path.parent.mkdir(exist_ok=True)
-    photo_caption = decoded_response['alt']
+    url_for_download = response.json()['img']
     response = requests.get(url_for_download)
     response.raise_for_status()
-    with open(path, 'wb') as file:
+    with open('comic.png', 'wb') as file:
         file.write(response.content)
+
+
+def get_photo_caption(comic_number):
+    response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
+    response.raise_for_status()
+    photo_caption = response.json()['alt']
     return photo_caption
 
 
@@ -77,7 +80,8 @@ def main():
     group_id = os.getenv('VK_GROUP_ID')
     vk_token = os.getenv('VK_TOKEN')
     api_version = os.getenv('API_VERSION')
-    photo_caption = download_img(comic_number, path)
+    download_img(comic_number)
+    photo_caption = get_photo_caption(comic_number)
     upload_url = get_upload_url(group_id, vk_token, api_version)
     saved_photo_details = upload_img(upload_url, path, group_id,
                                      vk_token, api_version)
