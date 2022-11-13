@@ -53,7 +53,9 @@ def upload_img(upload_url, path_to_img, group_id,
     decoded_response = response.json()
     if 'error' in decoded_response:
         raise requests.exceptions.HTTPError(decoded_response['error'])
-    return decoded_response
+    img_owner_id = decoded_response['response'][0]['owner_id']
+    photo_id = decoded_response['response'][0]['id']
+    return img_owner_id, photo_id
 
 
 def get_last_comic_num():
@@ -64,10 +66,8 @@ def get_last_comic_num():
     return num
 
 
-def post_image(saved_photo_details, photo_caption, group_id, vk_token, api_version):
+def post_image(img_owner_id, photo_id, photo_caption, group_id, vk_token, api_version):
     url = 'https://api.vk.com/method/wall.post'
-    img_owner_id = int(saved_photo_details['response'][0]['owner_id'])
-    photo_id = saved_photo_details['response'][0]['id']
     params = {'attachments': f'photo{img_owner_id}_{photo_id}',
               'message': photo_caption,
               'owner_id': f'-{group_id}',
@@ -86,15 +86,16 @@ def main():
     group_id = os.getenv('VK_GROUP_ID')
     vk_token = os.getenv('VK_TOKEN')
     api_version = os.getenv('API_VERSION')
-    download_img(comic_number)
-    photo_caption = get_photo_caption(comic_number)
-    upload_url = get_upload_url(group_id, vk_token, api_version)
-    saved_photo_details = upload_img(upload_url, path, group_id,
-                                     vk_token, api_version)
-    post_image(saved_photo_details,
-               photo_caption, group_id,
-               vk_token, api_version)
-    path.unlink(missing_ok=True)
+    try:
+        download_img(comic_number)
+        photo_caption = get_photo_caption(comic_number)
+        upload_url = get_upload_url(group_id, vk_token, api_version)
+        img_owner_id, photo_id = upload_img(upload_url, path, group_id,
+                                            vk_token, api_version)
+        post_image(img_owner_id, photo_id, photo_caption,
+                   group_id, vk_token, api_version)
+    finally:
+        path.unlink(missing_ok=True)
 
 
 if __name__ == '__main__':
