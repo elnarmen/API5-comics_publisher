@@ -6,10 +6,16 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 
+def raise_for_status_vk(decoded_response):
+    if 'error' in decoded_response:
+        raise requests.exceptions.HTTPError(decoded_response['error'])
+
 def download_img(comic_number):
     response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
     response.raise_for_status()
-    url_for_download = response.json()['img']
+    decoded_responce = response.json()
+    raise_for_status_vk(decoded_responce)
+    url_for_download = decoded_responce['img']
     response = requests.get(url_for_download)
     response.raise_for_status()
     with open('comic.png', 'wb') as file:
@@ -19,7 +25,9 @@ def download_img(comic_number):
 def get_photo_caption(comic_number):
     response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
     response.raise_for_status()
-    photo_caption = response.json()['alt']
+    decoded_response = response.json()
+    raise_for_status_vk(decoded_response)
+    photo_caption = decoded_response['alt']
     return photo_caption
 
 
@@ -28,8 +36,8 @@ def get_upload_url(group_id, vk_token, api_version):
     params = {'group_id': group_id, 'access_token': vk_token, 'v': api_version}
     response = requests.get(url, params)
     decoded_response = response.json()
-    if 'error' in decoded_response:
-        raise requests.exceptions.HTTPError(decoded_response['error'])
+    response.raise_for_status()
+    raise_for_status_vk(decoded_response)
     upload_url = decoded_response['response']['upload_url']
     return upload_url
 
@@ -41,6 +49,7 @@ def upload_img(upload_url, path_to_img, group_id,
         response = requests.post(upload_url, files=files)
     response.raise_for_status()
     decoded_response = response.json()
+    raise_for_status_vk(decoded_response)
     params = {
         'server': decoded_response['server'],
         'photo': decoded_response['photo'],
@@ -50,9 +59,9 @@ def upload_img(upload_url, path_to_img, group_id,
         'v': api_version,
     }
     response = requests.post('https://api.vk.com/method/photos.saveWallPhoto', params)
+    response.raise_for_status()
     decoded_response = response.json()
-    if 'error' in decoded_response:
-        raise requests.exceptions.HTTPError(decoded_response['error'])
+    raise_for_status_vk(decoded_response)
     img_owner_id = decoded_response['response'][0]['owner_id']
     photo_id = decoded_response['response'][0]['id']
     return img_owner_id, photo_id
@@ -62,7 +71,9 @@ def get_last_comic_num():
     url = 'https://xkcd.com/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
-    num = response.json()['num']
+    decoded_response = response.json()
+    raise_for_status_vk(decoded_response)
+    num = decoded_response['num']
     return num
 
 
@@ -75,9 +86,10 @@ def post_image(img_owner_id, photo_id, photo_caption, group_id, vk_token, api_ve
               'access_token': vk_token,
               'v': api_version}
     response = requests.post(url, params)
+    response.raise_for_status()
     decoded_response = response.json()
-    if 'error' in decoded_response:
-        raise requests.exceptions.HTTPError(decoded_response['error'])
+    raise_for_status_vk(decoded_response)
+
 
 def main():
     load_dotenv()
