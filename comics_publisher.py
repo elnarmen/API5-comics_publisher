@@ -10,24 +10,18 @@ def raise_for_status_vk(decoded_response):
     if 'error' in decoded_response:
         raise requests.exceptions.HTTPError(decoded_response['error'])
 
+
 def download_img(comic_number):
     response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
     response.raise_for_status()
     decoded_responce = response.json()
     raise_for_status_vk(decoded_responce)
     url_for_download = decoded_responce['img']
+    photo_caption = decoded_responce['alt']
     response = requests.get(url_for_download)
     response.raise_for_status()
     with open('comic.png', 'wb') as file:
         file.write(response.content)
-
-
-def get_photo_caption(comic_number):
-    response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
-    response.raise_for_status()
-    decoded_response = response.json()
-    raise_for_status_vk(decoded_response)
-    photo_caption = decoded_response['alt']
     return photo_caption
 
 
@@ -99,8 +93,7 @@ def main():
     vk_token = os.getenv('VK_TOKEN')
     api_version = os.getenv('API_VERSION')
     try:
-        download_img(comic_number)
-        photo_caption = get_photo_caption(comic_number)
+        photo_caption = download_img(comic_number)
         upload_url = get_upload_url(group_id, vk_token, api_version)
         img_owner_id, photo_id = upload_img(upload_url, path, group_id,
                                             vk_token, api_version)
