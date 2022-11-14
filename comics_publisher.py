@@ -15,7 +15,6 @@ def download_img(comic_number):
     response = requests.get(f'https://xkcd.com/{comic_number}/info.0.json')
     response.raise_for_status()
     decoded_responce = response.json()
-    raise_for_status_vk(decoded_responce)
     url_for_download = decoded_responce['img']
     photo_caption = decoded_responce['alt']
     response = requests.get(url_for_download)
@@ -65,9 +64,7 @@ def get_last_comic_num():
     url = 'https://xkcd.com/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
-    decoded_response = response.json()
-    raise_for_status_vk(decoded_response)
-    num = decoded_response['num']
+    num = response.json()['num']
     return num
 
 
